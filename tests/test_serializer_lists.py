@@ -291,7 +291,7 @@ class TestListSerializerClass:
 
         serializer = TestSerializer(data=[], many=True)
         assert not serializer.is_valid()
-        assert serializer.errors == {'non_field_errors': ['Non field error']}
+        assert serializer.errors == {'non_field_errors': [('Non field error', 'test')]}
 
 
 class TestSerializerPartialUsage:

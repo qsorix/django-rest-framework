@@ -30,6 +30,10 @@ def _force_text_recursive(data):
         if isinstance(data, ReturnList):
             return ReturnList(ret, serializer=data.serializer)
         return data
+    elif isinstance(data, tuple):
+        return tuple([
+            _force_text_recursive(item) for item in data
+        ])
     elif isinstance(data, dict):
         ret = {
             key: _force_text_recursive(value)
@@ -94,12 +98,18 @@ class ValidationError(APIException):
                 'REQUIRE_ERROR_CODES settings key.'
             )
 
-        return detail
+        return (detail, code)
 
     def __init__(self, detail, code=None):
         # For validation errors the 'detail' key is always required.
         # The details should always be coerced to a list if not already.
         if not isinstance(detail, dict) and not isinstance(detail, list):
+            if api_settings.REQUIRE_ERROR_CODES:
+                assert code is not None, (
+                    'The `code` argument is required for single errors. '
+                    'Strict checking of `code` is enabled with '
+                    'REQUIRE_ERROR_CODES settings key.'
+                )
             detail = [self.build_detail(detail, code)]
         else:
             if api_settings.REQUIRE_ERROR_CODES:

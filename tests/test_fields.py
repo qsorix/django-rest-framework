@@ -26,7 +26,7 @@ class TestEmpty:
         field = serializers.IntegerField()
         with pytest.raises(serializers.ValidationError) as exc_info:
             field.run_validation()
-        assert exc_info.value.detail == ['This field is required.']
+        assert exc_info.value.detail == [('This field is required.', 'required')]
 
     def test_not_required(self):
         """
@@ -43,7 +43,7 @@ class TestEmpty:
         field = serializers.IntegerField()
         with pytest.raises(serializers.ValidationError) as exc_info:
             field.run_validation(None)
-        assert exc_info.value.detail == ['This field may not be null.']
+        assert exc_info.value.detail == [('This field may not be null.', 'null')]
 
     def test_allow_null(self):
         """
@@ -60,7 +60,7 @@ class TestEmpty:
         field = serializers.CharField()
         with pytest.raises(serializers.ValidationError) as exc_info:
             field.run_validation('')
-        assert exc_info.value.detail == ['This field may not be blank.']
+        assert exc_info.value.detail == [('This field may not be blank.', 'blank')]
 
     def test_allow_blank(self):
         """
@@ -426,7 +426,7 @@ class FieldValues:
         for input_value, expected_failure in get_items(self.invalid_inputs):
             with pytest.raises(serializers.ValidationError) as exc_info:
                 self.field.run_validation(input_value)
-            assert exc_info.value.detail == expected_failure
+            assert exc_info.value.detail == expected_failure, ("Wrong result for input " + repr(input_value))
 
     def test_outputs(self):
         for output_value, expected_output in get_items(self.outputs):
@@ -450,8 +450,8 @@ class TestBooleanField(FieldValues):
         False: False,
     }
     invalid_inputs = {
-        'foo': ['"foo" is not a valid boolean.'],
-        None: ['This field may not be null.']
+        'foo': [('"foo" is not a valid boolean.', 'invalid')],
+        None: [('This field may not be null.', 'null')]
     }
     outputs = {
         'true': True,
@@ -475,7 +475,7 @@ class TestBooleanField(FieldValues):
         for input_value in inputs:
             with pytest.raises(serializers.ValidationError) as exc_info:
                 field.run_validation(input_value)
-            expected = ['"{0}" is not a valid boolean.'.format(input_value)]
+            expected = [('"{0}" is not a valid boolean.'.format(input_value), 'invalid')]
             assert exc_info.value.detail == expected
 
 
@@ -492,7 +492,7 @@ class TestNullBooleanField(FieldValues):
         None: None
     }
     invalid_inputs = {
-        'foo': ['"foo" is not a valid boolean.'],
+        'foo': [('"foo" is not a valid boolean.', 'invalid')],
     }
     outputs = {
         'true': True,
@@ -517,7 +517,7 @@ class TestCharField(FieldValues):
         'abc': 'abc'
     }
     invalid_inputs = {
-        '': ['This field may not be blank.']
+        '': [('This field may not be blank.', 'blank')]
     }
     outputs = {
         1: '1',
@@ -538,7 +538,7 @@ class TestCharField(FieldValues):
 
         with pytest.raises(serializers.ValidationError) as exc_info:
             field.run_validation('   ')
-        assert exc_info.value.detail == ['This field may not be blank.']
+        assert exc_info.value.detail == [('This field may not be blank.', 'blank')]
 
 
 class TestEmailField(FieldValues):
@@ -550,7 +550,7 @@ class TestEmailField(FieldValues):
         ' example@example.com ': 'example@example.com',
     }
     invalid_inputs = {
-        'examplecom': ['Enter a valid email address.']
+        'examplecom': [('Enter a valid email address.', 'invalid')]
     }
     outputs = {}
     field = serializers.EmailField()
@@ -564,7 +564,7 @@ class TestRegexField(FieldValues):
         'a9': 'a9',
     }
     invalid_inputs = {
-        'A9': ["This value does not match the required pattern."]
+        'A9': [("This value does not match the required pattern.", 'invalid')]
     }
     outputs = {}
     field = serializers.RegexField(regex='[a-z][0-9]')
@@ -578,7 +578,7 @@ class TestSlugField(FieldValues):
         'slug-99': 'slug-99',
     }
     invalid_inputs = {
-        'slug 99': ['Enter a valid "slug" consisting of letters, numbers, underscores or hyphens.']
+        'slug 99': [('Enter a valid "slug" consisting of letters, numbers, underscores or hyphens.', 'invalid')]
     }
     outputs = {}
     field = serializers.SlugField()
@@ -592,7 +592,7 @@ class TestURLField(FieldValues):
         'http://example.com': 'http://example.com',
     }
     invalid_inputs = {
-        'example.com': ['Enter a valid URL.']
+        'example.com': [('Enter a valid URL.', 'invalid')]
     }
     outputs = {}
     field = serializers.URLField()
@@ -609,7 +609,7 @@ class TestUUIDField(FieldValues):
         284758210125106368185219588917561929842: uuid.UUID('d63a6fb6-88d5-40c7-a91c-9edf73283072')
     }
     invalid_inputs = {
-        '825d7aeb-05a9-45b5-a5b7': ['"825d7aeb-05a9-45b5-a5b7" is not a valid UUID.']
+        '825d7aeb-05a9-45b5-a5b7': [('"825d7aeb-05a9-45b5-a5b7" is not a valid UUID.', 'invalid')]
     }
     outputs = {
         uuid.UUID('825d7aeb-05a9-45b5-a5b7-05df87923cda'): '825d7aeb-05a9-45b5-a5b7-05df87923cda'
@@ -640,10 +640,10 @@ class TestIPAddressField(FieldValues):
         '2001:cdba::3257:9652': '2001:cdba::3257:9652'
     }
     invalid_inputs = {
-        '127001': ['Enter a valid IPv4 or IPv6 address.'],
-        '127.122.111.2231': ['Enter a valid IPv4 or IPv6 address.'],
-        '2001:::9652': ['Enter a valid IPv4 or IPv6 address.'],
-        '2001:0db8:85a3:0042:1000:8a2e:0370:73341': ['Enter a valid IPv4 or IPv6 address.'],
+        '127001': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
+        '127.122.111.2231': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
+        '2001:::9652': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
+        '2001:0db8:85a3:0042:1000:8a2e:0370:73341': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
     }
     outputs = {}
     field = serializers.IPAddressField()
@@ -658,8 +658,8 @@ class TestIPv4AddressField(FieldValues):
         '192.168.33.255': '192.168.33.255',
     }
     invalid_inputs = {
-        '127001': ['Enter a valid IPv4 address.'],
-        '127.122.111.2231': ['Enter a valid IPv4 address.'],
+        '127001': [('Enter a valid IPv4 address.', 'invalid')],
+        '127.122.111.2231': [('Enter a valid IPv4 address.', 'invalid')],
     }
     outputs = {}
     field = serializers.IPAddressField(protocol='IPv4')
@@ -675,8 +675,8 @@ class TestIPv6AddressField(FieldValues):
         '2001:cdba::3257:9652': '2001:cdba::3257:9652'
     }
     invalid_inputs = {
-        '2001:::9652': ['Enter a valid IPv4 or IPv6 address.'],
-        '2001:0db8:85a3:0042:1000:8a2e:0370:73341': ['Enter a valid IPv4 or IPv6 address.'],
+        '2001:::9652': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
+        '2001:0db8:85a3:0042:1000:8a2e:0370:73341': [('Enter a valid IPv4 or IPv6 address.', 'invalid')],
     }
     outputs = {}
     field = serializers.IPAddressField(protocol='IPv6')
@@ -691,7 +691,7 @@ class TestFilePathField(FieldValues):
         __file__: __file__,
     }
     invalid_inputs = {
-        'wrong_path': ['"wrong_path" is not a valid path choice.']
+        'wrong_path': [('"wrong_path" is not a valid path choice.', 'invalid_choice')]
     }
     outputs = {
     }
@@ -716,9 +716,9 @@ class TestIntegerField(FieldValues):
         '1.0': 1
     }
     invalid_inputs = {
-        0.5: ['A valid integer is required.'],
-        'abc': ['A valid integer is required.'],
-        '0.5': ['A valid integer is required.']
+        0.5: [('A valid integer is required.', 'invalid')],
+        'abc': [('A valid integer is required.', 'invalid')],
+        '0.5': [('A valid integer is required.', 'invalid')]
     }
     outputs = {
         '1': 1,
@@ -742,10 +742,10 @@ class TestMinMaxIntegerField(FieldValues):
         3: 3,
     }
     invalid_inputs = {
-        0: ['Ensure this value is greater than or equal to 1.'],
-        4: ['Ensure this value is less than or equal to 3.'],
-        '0': ['Ensure this value is greater than or equal to 1.'],
-        '4': ['Ensure this value is less than or equal to 3.'],
+        0: [('Ensure this value is greater than or equal to 1.', 'min_value')],
+        4: [('Ensure this value is less than or equal to 3.', 'max_value')],
+        '0': [('Ensure this value is greater than or equal to 1.', 'min_value')],
+        '4': [('Ensure this value is less than or equal to 3.', 'max_value')],
     }
     outputs = {}
     field = serializers.IntegerField(min_value=1, max_value=3)
@@ -764,7 +764,7 @@ class TestFloatField(FieldValues):
         0.0: 0.0,
     }
     invalid_inputs = {
-        'abc': ["A valid number is required."]
+        'abc': [("A valid number is required.", 'invalid')]
     }
     outputs = {
         '1': 1.0,
@@ -790,10 +790,10 @@ class TestMinMaxFloatField(FieldValues):
         3.0: 3.0,
     }
     invalid_inputs = {
-        0.9: ['Ensure this value is greater than or equal to 1.'],
-        3.1: ['Ensure this value is less than or equal to 3.'],
-        '0.0': ['Ensure this value is greater than or equal to 1.'],
-        '3.1': ['Ensure this value is less than or equal to 3.'],
+        0.9: [('Ensure this value is greater than or equal to 1.', 'min_value')],
+        3.1: [('Ensure this value is less than or equal to 3.', 'max_value')],
+        '0.0': [('Ensure this value is greater than or equal to 1.', 'min_value')],
+        '3.1': [('Ensure this value is less than or equal to 3.', 'max_value')],
     }
     outputs = {}
     field = serializers.FloatField(min_value=1, max_value=3)
@@ -813,14 +813,14 @@ class TestDecimalField(FieldValues):
         '2E+1': Decimal('20'),
     }
     invalid_inputs = (
-        ('abc', ["A valid number is required."]),
-        (Decimal('Nan'), ["A valid number is required."]),
-        (Decimal('Inf'), ["A valid number is required."]),
-        ('12.345', ["Ensure that there are no more than 3 digits in total."]),
-        (200000000000.0, ["Ensure that there are no more than 3 digits in total."]),
-        ('0.01', ["Ensure that there are no more than 1 decimal places."]),
-        (123, ["Ensure that there are no more than 2 digits before the decimal point."]),
-        ('2E+2', ["Ensure that there are no more than 2 digits before the decimal point."])
+        ('abc', [("A valid number is required.", 'invalid')]),
+        (Decimal('Nan'), [("A valid number is required.", 'invalid')]),
+        (Decimal('Inf'), [("A valid number is required.", 'invalid')]),
+        ('12.345', [("Ensure that there are no more than 3 digits in total.", 'max_digits')]),
+        (200000000000.0, [("Ensure that there are no more than 3 digits in total.", 'max_digits')]),
+        ('0.01', [("Ensure that there are no more than 1 decimal places.", 'max_decimal_places')]),
+        (123, [("Ensure that there are no more than 2 digits before the decimal point.", 'max_whole_digits')]),
+        ('2E+2', [("Ensure that there are no more than 2 digits before the decimal point.", 'max_whole_digits')])
     )
     outputs = {
         '1': '1.0',
@@ -846,8 +846,8 @@ class TestMinMaxDecimalField(FieldValues):
         '20.0': Decimal('20.0'),
     }
     invalid_inputs = {
-        '9.9': ['Ensure this value is greater than or equal to 10.'],
-        '20.1': ['Ensure this value is less than or equal to 20.'],
+        '9.9': [('Ensure this value is greater than or equal to 10.', 'min_value')],
+        '20.1': [('Ensure this value is less than or equal to 20.', 'max_value')],
     }
     outputs = {}
     field = serializers.DecimalField(
@@ -887,9 +887,9 @@ class TestDateField(FieldValues):
         datetime.date(2001, 1, 1): datetime.date(2001, 1, 1),
     }
     invalid_inputs = {
-        'abc': ['Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].'],
-        '2001-99-99': ['Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].'],
-        datetime.datetime(2001, 1, 1, 12, 00): ['Expected a date but got a datetime.'],
+        'abc': [('Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].', 'invalid')],
+        '2001-99-99': [('Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].', 'invalid')],
+        datetime.datetime(2001, 1, 1, 12, 00): [('Expected a date but got a datetime.', 'datetime')],
     }
     outputs = {
         datetime.date(2001, 1, 1): '2001-01-01',
@@ -908,7 +908,7 @@ class TestCustomInputFormatDateField(FieldValues):
         '1 Jan 2001': datetime.date(2001, 1, 1),
     }
     invalid_inputs = {
-        '2001-01-01': ['Date has wrong format. Use one of these formats instead: DD [Jan-Dec] YYYY.']
+        '2001-01-01': [('Date has wrong format. Use one of these formats instead: DD [Jan-Dec] YYYY.', 'invalid')]
     }
     outputs = {}
     field = serializers.DateField(input_formats=['%d %b %Y'])
@@ -952,9 +952,9 @@ class TestDateTimeField(FieldValues):
         '2001-01-01T14:00+01:00' if (django.VERSION > (1, 4)) else '2001-01-01T13:00Z': datetime.datetime(2001, 1, 1, 13, 00, tzinfo=timezone.UTC())
     }
     invalid_inputs = {
-        'abc': ['Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z].'],
-        '2001-99-99T99:00': ['Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z].'],
-        datetime.date(2001, 1, 1): ['Expected a datetime but got a date.'],
+        'abc': [('Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z].', 'invalid')],
+        '2001-99-99T99:00': [('Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z].', 'invalid')],
+        datetime.date(2001, 1, 1): [('Expected a datetime but got a date.', 'date')],
     }
     outputs = {
         datetime.datetime(2001, 1, 1, 13, 00): '2001-01-01T13:00:00',
@@ -971,7 +971,7 @@ class TestCustomInputFormatDateTimeField(FieldValues):
         '1:35pm, 1 Jan 2001': datetime.datetime(2001, 1, 1, 13, 35, tzinfo=timezone.UTC()),
     }
     invalid_inputs = {
-        '2001-01-01T20:50': ['Datetime has wrong format. Use one of these formats instead: hh:mm[AM|PM], DD [Jan-Dec] YYYY.']
+        '2001-01-01T20:50': [('Datetime has wrong format. Use one of these formats instead: hh:mm[AM|PM], DD [Jan-Dec] YYYY.', 'invalid')]
     }
     outputs = {}
     field = serializers.DateTimeField(default_timezone=timezone.UTC(), input_formats=['%I:%M%p, %d %b %Y'])
@@ -1023,8 +1023,8 @@ class TestTimeField(FieldValues):
         datetime.time(13, 00): datetime.time(13, 00),
     }
     invalid_inputs = {
-        'abc': ['Time has wrong format. Use one of these formats instead: hh:mm[:ss[.uuuuuu]].'],
-        '99:99': ['Time has wrong format. Use one of these formats instead: hh:mm[:ss[.uuuuuu]].'],
+        'abc': [('Time has wrong format. Use one of these formats instead: hh:mm[:ss[.uuuuuu]].', 'invalid')],
+        '99:99': [('Time has wrong format. Use one of these formats instead: hh:mm[:ss[.uuuuuu]].', 'invalid')],
     }
     outputs = {
         datetime.time(13, 00): '13:00:00'
@@ -1040,7 +1040,7 @@ class TestCustomInputFormatTimeField(FieldValues):
         '1:00pm': datetime.time(13, 00),
     }
     invalid_inputs = {
-        '13:00': ['Time has wrong format. Use one of these formats instead: hh:mm[AM|PM].'],
+        '13:00': [('Time has wrong format. Use one of these formats instead: hh:mm[AM|PM].', 'invalid')],
     }
     outputs = {}
     field = serializers.TimeField(input_formats=['%I:%M%p'])
@@ -1084,8 +1084,8 @@ class TestDurationField(FieldValues):
         3600: datetime.timedelta(hours=1),
     }
     invalid_inputs = {
-        'abc': ['Duration has wrong format. Use one of these formats instead: [DD] [HH:[MM:]]ss[.uuuuuu].'],
-        '3 08:32 01.123': ['Duration has wrong format. Use one of these formats instead: [DD] [HH:[MM:]]ss[.uuuuuu].'],
+        'abc': [('Duration has wrong format. Use one of these formats instead: [DD] [HH:[MM:]]ss[.uuuuuu].', 'invalid')],
+        '3 08:32 01.123': [('Duration has wrong format. Use one of these formats instead: [DD] [HH:[MM:]]ss[.uuuuuu].', 'invalid')],
     }
     outputs = {
         datetime.timedelta(days=3, hours=8, minutes=32, seconds=1, microseconds=123): '3 08:32:01.000123',
@@ -1106,7 +1106,7 @@ class TestChoiceField(FieldValues):
         'good': 'good',
     }
     invalid_inputs = {
-        'amazing': ['"amazing" is not a valid choice.']
+        'amazing': [('"amazing" is not a valid choice.', 'invalid_choice')]
     }
     outputs = {
         'good': 'good',
@@ -1191,8 +1191,8 @@ class TestChoiceFieldWithType(FieldValues):
         3: 3,
     }
     invalid_inputs = {
-        5: ['"5" is not a valid choice.'],
-        'abc': ['"abc" is not a valid choice.']
+        5: [('"5" is not a valid choice.', 'invalid_choice')],
+        'abc': [('"abc" is not a valid choice.', 'invalid_choice')]
     }
     outputs = {
         '1': 1,
@@ -1218,7 +1218,7 @@ class TestChoiceFieldWithListChoices(FieldValues):
         'good': 'good',
     }
     invalid_inputs = {
-        'awful': ['"awful" is not a valid choice.']
+        'awful': [('"awful" is not a valid choice.', 'invalid_choice')]
     }
     outputs = {
         'good': 'good'
@@ -1237,7 +1237,7 @@ class TestChoiceFieldWithGroupedChoices(FieldValues):
         'good': 'good',
     }
     invalid_inputs = {
-        'awful': ['"awful" is not a valid choice.']
+        'awful': [('"awful" is not a valid choice.', 'invalid_choice')]
     }
     outputs = {
         'good': 'good'
@@ -1267,7 +1267,7 @@ class TestChoiceFieldWithMixedChoices(FieldValues):
         'good': 'good',
     }
     invalid_inputs = {
-        'awful': ['"awful" is not a valid choice.']
+        'awful': [('"awful" is not a valid choice.', 'invalid_choice')]
     }
     outputs = {
         'good': 'good'
@@ -1296,8 +1296,8 @@ class TestMultipleChoiceField(FieldValues):
         ('aircon', 'manual'): set(['aircon', 'manual']),
     }
     invalid_inputs = {
-        'abc': ['Expected a list of items but got type "str".'],
-        ('aircon', 'incorrect'): ['"incorrect" is not a valid choice.']
+        'abc': [('Expected a list of items but got type "str".', 'not_a_list')],
+        ('aircon', 'incorrect'): [('"incorrect" is not a valid choice.', 'invalid_choice')]
     }
     outputs = [
         (['aircon', 'manual', 'incorrect'], set(['aircon', 'manual', 'incorrect']))
@@ -1325,7 +1325,7 @@ class TestEmptyMultipleChoiceField(FieldValues):
     valid_inputs = {
     }
     invalid_inputs = (
-        ([], ['This selection may not be empty.']),
+        ([], [('This selection may not be empty.', 'empty')]),
     )
     outputs = [
     ]
@@ -1364,10 +1364,10 @@ class TestFileField(FieldValues):
         (MockFile(name='example', size=10), MockFile(name='example', size=10))
     ]
     invalid_inputs = [
-        ('invalid', ['The submitted data was not a file. Check the encoding type on the form.']),
-        (MockFile(name='example.txt', size=0), ['The submitted file is empty.']),
-        (MockFile(name='', size=10), ['No filename could be determined.']),
-        (MockFile(name='x' * 100, size=10), ['Ensure this filename has at most 10 characters (it has 100).'])
+        ('invalid', [('The submitted data was not a file. Check the encoding type on the form.', 'invalid')]),
+        (MockFile(name='example.txt', size=0), [('The submitted file is empty.', 'empty')]),
+        (MockFile(name='', size=10), [('No filename could be determined.', 'no_name')]),
+        (MockFile(name='x' * 100, size=10), [('Ensure this filename has at most 10 characters (it has 100).', 'max_length')])
     ]
     outputs = [
         (MockFile(name='example.txt', url='/example.txt'), '/example.txt'),
@@ -1409,7 +1409,7 @@ class TestInvalidImageField(FieldValues):
     """
     valid_inputs = {}
     invalid_inputs = [
-        (MockFile(name='example.txt', size=10), ['Upload a valid image. The file you uploaded was either not an image or a corrupted image.'])
+        (MockFile(name='example.txt', size=10), [('Upload a valid image. The file you uploaded was either not an image or a corrupted image.', 'invalid_image')])
     ]
     outputs = {}
     field = serializers.ImageField(_DjangoImageField=FailImageValidation)
@@ -1439,8 +1439,8 @@ class TestListField(FieldValues):
         ([], [])
     ]
     invalid_inputs = [
-        ('not a list', ['Expected a list of items but got type "str".']),
-        ([1, 2, 'error'], ['A valid integer is required.'])
+        ('not a list', [('Expected a list of items but got type "str".', 'not_a_list')]),
+        ([1, 2, 'error'], [('A valid integer is required.', 'invalid')])
     ]
     outputs = [
         ([1, 2, 3], [1, 2, 3]),
@@ -1464,7 +1464,7 @@ class TestEmptyListField(FieldValues):
     """
     valid_inputs = {}
     invalid_inputs = [
-        ([], ['This list may not be empty.'])
+        ([], [('This list may not be empty.', 'empty')])
     ]
     outputs = {}
     field = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
@@ -1478,7 +1478,7 @@ class TestUnvalidatedListField(FieldValues):
         ([1, '2', True, [4, 5, 6]], [1, '2', True, [4, 5, 6]]),
     ]
     invalid_inputs = [
-        ('not a list', ['Expected a list of items but got type "str".']),
+        ('not a list', [('Expected a list of items but got type "str".', 'not_a_list')]),
     ]
     outputs = [
         ([1, '2', True, [4, 5, 6]], [1, '2', True, [4, 5, 6]]),
@@ -1494,8 +1494,8 @@ class TestDictField(FieldValues):
         ({'a': 1, 'b': '2', 3: 3}, {'a': '1', 'b': '2', '3': '3'}),
     ]
     invalid_inputs = [
-        ({'a': 1, 'b': None}, ['This field may not be null.']),
-        ('not a dict', ['Expected a dictionary of items but got type "str".']),
+        ({'a': 1, 'b': None}, [('This field may not be null.', 'null')]),
+        ('not a dict', [('Expected a dictionary of items but got type "str".', 'not_a_dict')]),
     ]
     outputs = [
         ({'a': 1, 'b': '2', 3: 3}, {'a': '1', 'b': '2', '3': '3'}),
@@ -1520,7 +1520,7 @@ class TestUnvalidatedDictField(FieldValues):
         ({'a': 1, 'b': [4, 5, 6], 1: 123}, {'a': 1, 'b': [4, 5, 6], '1': 123}),
     ]
     invalid_inputs = [
-        ('not a dict', ['Expected a dictionary of items but got type "str".']),
+        ('not a dict', [('Expected a dictionary of items but got type "str".', 'not_a_dict')]),
     ]
     outputs = [
         ({'a': 1, 'b': [4, 5, 6]}, {'a': 1, 'b': [4, 5, 6]}),
@@ -1544,7 +1544,7 @@ class TestJSONField(FieldValues):
         }),
     ]
     invalid_inputs = [
-        ({'a': set()}, ['Value must be valid JSON.']),
+        ({'a': set()}, [('Value must be valid JSON.', 'invalid')]),
     ]
     outputs = [
         ({
@@ -1572,7 +1572,7 @@ class TestBinaryJSONField(FieldValues):
         }),
     ]
     invalid_inputs = [
-        ('{"a": "unterminated string}', ['Value must be valid JSON.']),
+        ('{"a": "unterminated string}', [('Value must be valid JSON.', 'invalid')]),
     ]
     outputs = [
         (['some', 'list', True, 1.23], b'["some", "list", true, 1.23]'),

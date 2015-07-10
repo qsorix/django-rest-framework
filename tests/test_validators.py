@@ -48,7 +48,7 @@ class TestUniquenessValidation(TestCase):
         data = {'username': 'existing'}
         serializer = UniquenessSerializer(data=data)
         assert not serializer.is_valid()
-        assert serializer.errors == {'username': ['UniquenessModel with this username already exists.']}
+        assert serializer.errors == {'username': [('UniquenessModel with this username already exists.', 'unique')]}
 
     def test_is_unique(self):
         data = {'username': 'other'}
@@ -152,7 +152,7 @@ class TestUniquenessTogetherValidation(TestCase):
         assert not serializer.is_valid()
         assert serializer.errors == {
             'non_field_errors': [
-                'The fields race_name, position must make a unique set.'
+                ('The fields race_name, position must make a unique set.', 'unique')
             ]
         }
 
@@ -190,7 +190,7 @@ class TestUniquenessTogetherValidation(TestCase):
         serializer = UniquenessTogetherSerializer(data=data, partial=True)
         assert not serializer.is_valid()
         assert serializer.errors == {
-            'race_name': ['This field is required.']
+            'race_name': [('This field is required.', 'required')]
         }
 
     def test_ignore_excluded_fields(self):
@@ -279,7 +279,7 @@ class TestUniquenessForDateValidation(TestCase):
         serializer = UniqueForDateSerializer(data=data)
         assert not serializer.is_valid()
         assert serializer.errors == {
-            'slug': ['This field must be unique for the "published" date.']
+            'slug': [('This field must be unique for the "published" date.', 'unique')]
         }
 
     def test_is_unique_for_date(self):

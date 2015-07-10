@@ -113,7 +113,7 @@ class TestNestedSerializerWithMany:
 
         assert not serializer.is_valid()
 
-        expected_errors = {'not_allow_null': [serializer.error_messages['null']]}
+        expected_errors = {'not_allow_null': [(serializer.error_messages['null'], 'null')]}
         assert serializer.errors == expected_errors
 
     def test_run_the_field_validation_even_if_the_field_is_null(self):

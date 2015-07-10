@@ -32,7 +32,7 @@ class TestSerializer:
         serializer = self.Serializer(data={'char': 'abc'})
         assert not serializer.is_valid()
         assert serializer.validated_data == {}
-        assert serializer.errors == {'integer': ['This field is required.']}
+        assert serializer.errors == {'integer': [('This field is required.', 'required')]}
 
     def test_partial_validation(self):
         serializer = self.Serializer(data={'char': 'abc'}, partial=True)
@@ -77,7 +77,7 @@ class TestValidateMethod:
 
         serializer = ExampleSerializer(data={'char': 'abc', 'integer': 123})
         assert not serializer.is_valid()
-        assert serializer.errors == {'non_field_errors': ['Non field error']}
+        assert serializer.errors == {'non_field_errors': [('Non field error', 'test')]}
 
     def test_field_error_validate_method(self):
         class ExampleSerializer(serializers.Serializer):
@@ -85,11 +85,11 @@ class TestValidateMethod:
             integer = serializers.IntegerField()
 
             def validate(self, attrs):
-                raise serializers.ValidationError({'char': 'Field error'})
+                raise serializers.ValidationError({'char': ('Field error', 'test')})
 
         serializer = ExampleSerializer(data={'char': 'abc', 'integer': 123})
         assert not serializer.is_valid()
-        assert serializer.errors == {'char': ['Field error']}
+        assert serializer.errors == {'char': [('Field error', 'test')]}
 
 
 class TestBaseSerializer:
@@ -319,7 +319,7 @@ class TestGetValidationErrorDetail:
     def test_get_validation_error_detail_converts_django_errors(self):
         exc = DjangoValidationError("Missing field.", code='required')
         detail = serializers.get_validation_error_detail(exc)
-        assert detail == {'non_field_errors': ['Missing field.']}
+        assert detail == {'non_field_errors': [('Missing field.', 'required')]}
 
 
 class TestCapturingDjangoValidationError:
@@ -334,4 +334,4 @@ class TestCapturingDjangoValidationError:
 
         serializer = ExampleSerializer(data={'field': 'a'})
         assert not serializer.is_valid()
-        assert serializer.errors == {'field': ['validation failed']}
+        assert serializer.errors == {'field': [('validation failed', 'invalid')]}
