@@ -85,7 +85,7 @@ DEFAULTS = {
     # Exception handling
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'NON_FIELD_ERRORS_KEY': 'non_field_errors',
-    'REQUIRE_ERROR_CODES': False,
+    'REQUIRE_ERROR_CODES': True,
     'ERROR_BUILDER': 'rest_framework.exceptions.default_error_builder',
 
     # Testing
