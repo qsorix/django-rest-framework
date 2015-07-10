@@ -94,7 +94,7 @@ class TestAvoidValidation(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertDictEqual(serializer.errors, {
             'non_field_errors': [
-                'Invalid data. Expected a dictionary, but got %s.' % type('').__name__
+                ('Invalid data. Expected a dictionary, but got %s.' % type('').__name__, 'invalid')
             ]
         })
 
@@ -124,7 +124,7 @@ class TestMaxValueValidatorValidation(TestCase):
     def test_max_value_validation_serializer_fails(self):
         serializer = ValidationMaxValueValidatorModelSerializer(data={'number_value': 101})
         self.assertFalse(serializer.is_valid())
-        self.assertDictEqual({'number_value': ['Ensure this value is less than or equal to 100.']}, serializer.errors)
+        self.assertDictEqual({'number_value': [('Ensure this value is less than or equal to 100.', 'max_value')]}, serializer.errors)
 
     def test_max_value_validation_success(self):
         obj = ValidationMaxValueValidatorModel.objects.create(number_value=100)
@@ -138,7 +138,7 @@ class TestMaxValueValidatorValidation(TestCase):
         request = factory.patch('/{0}'.format(obj.pk), {'number_value': 101}, format='json')
         view = UpdateMaxValueValidationModel().as_view()
         response = view(request, pk=obj.pk).render()
-        self.assertEqual(response.content, b'{"number_value":["Ensure this value is less than or equal to 100."]}')
+        self.assertEqual(response.content, b'{"number_value":[["Ensure this value is less than or equal to 100.","max_value"]]}')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 

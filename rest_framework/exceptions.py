@@ -26,6 +26,10 @@ def _force_text_recursive(data):
         return [
             _force_text_recursive(item) for item in data
         ]
+    elif isinstance(data, tuple):
+        return tuple([
+            _force_text_recursive(item) for item in data
+        ])
     elif isinstance(data, dict):
         return dict([
             (key, _force_text_recursive(value))
@@ -76,7 +80,7 @@ def build_error(detail, error_code=None):
 
 
 def default_error_builder(detail, error_code=None):
-    return detail
+    return (detail, error_code)
 
 
 # The recommended style for using `ValidationError` is to keep it namespaced

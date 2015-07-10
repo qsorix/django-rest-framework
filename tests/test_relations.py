@@ -41,13 +41,13 @@ class TestPrimaryKeyRelatedField(APISimpleTestCase):
         with pytest.raises(serializers.ValidationError) as excinfo:
             self.field.to_internal_value(4)
         msg = excinfo.value.detail[0]
-        assert msg == 'Invalid pk "4" - object does not exist.'
+        assert msg == ('Invalid pk "4" - object does not exist.', 'does_not_exist')
 
     def test_pk_related_lookup_invalid_type(self):
         with pytest.raises(serializers.ValidationError) as excinfo:
             self.field.to_internal_value(BadType())
         msg = excinfo.value.detail[0]
-        assert msg == 'Incorrect type. Expected pk value, received BadType.'
+        assert msg == ('Incorrect type. Expected pk value, received BadType.', 'incorrect_type')
 
     def test_pk_representation(self):
         representation = self.field.to_representation(self.instance)
@@ -80,7 +80,7 @@ class TestProxiedPrimaryKeyRelatedField(APISimpleTestCase):
         with pytest.raises(serializers.ValidationError) as excinfo:
             self.field.to_internal_value(4)
         msg = excinfo.value.detail[0]
-        assert msg == 'Invalid pk "00000000-0000-0000-0000-000000000004" - object does not exist.'
+        assert msg == ('Invalid pk "00000000-0000-0000-0000-000000000004" - object does not exist.', 'does_not_exist')
 
     def test_pk_representation(self):
         representation = self.field.to_representation(self.instance)
@@ -164,13 +164,13 @@ class TestSlugRelatedField(APISimpleTestCase):
         with pytest.raises(serializers.ValidationError) as excinfo:
             self.field.to_internal_value('doesnotexist')
         msg = excinfo.value.detail[0]
-        assert msg == 'Object with name=doesnotexist does not exist.'
+        assert msg == ('Object with name=doesnotexist does not exist.', 'does_not_exist')
 
     def test_slug_related_lookup_invalid_type(self):
         with pytest.raises(serializers.ValidationError) as excinfo:
             self.field.to_internal_value(BadType())
         msg = excinfo.value.detail[0]
-        assert msg == 'Invalid value.'
+        assert msg == ('Invalid value.', 'invalid')
 
     def test_representation(self):
         representation = self.field.to_representation(self.instance)

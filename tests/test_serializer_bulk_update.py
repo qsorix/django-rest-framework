@@ -70,7 +70,7 @@ class BulkCreateSerializerTests(TestCase):
         expected_errors = [
             {},
             {},
-            {'id': ['A valid integer is required.']}
+            {'id': [('A valid integer is required.', 'invalid')]}
         ]
 
         serializer = self.BookSerializer(data=data, many=True)
@@ -88,9 +88,9 @@ class BulkCreateSerializerTests(TestCase):
         text_type_string = six.text_type.__name__
         message = 'Invalid data. Expected a dictionary, but got %s.' % text_type_string
         expected_errors = [
-            {'non_field_errors': [message]},
-            {'non_field_errors': [message]},
-            {'non_field_errors': [message]}
+            {'non_field_errors': [(message, 'invalid')]},
+            {'non_field_errors': [(message, 'invalid')]},
+            {'non_field_errors': [(message, 'invalid')]}
         ]
 
         self.assertEqual(serializer.errors, expected_errors)
@@ -103,7 +103,7 @@ class BulkCreateSerializerTests(TestCase):
         serializer = self.BookSerializer(data=data, many=True)
         self.assertEqual(serializer.is_valid(), False)
 
-        expected_errors = {'non_field_errors': ['Expected a list of items but got type "int".']}
+        expected_errors = {'non_field_errors': [('Expected a list of items but got type "int".', 'not_a_list')]}
 
         self.assertEqual(serializer.errors, expected_errors)
 
@@ -120,6 +120,6 @@ class BulkCreateSerializerTests(TestCase):
         serializer = self.BookSerializer(data=data, many=True)
         self.assertEqual(serializer.is_valid(), False)
 
-        expected_errors = {'non_field_errors': ['Expected a list of items but got type "dict".']}
+        expected_errors = {'non_field_errors': [('Expected a list of items but got type "dict".', 'not_a_list')]}
 
         self.assertEqual(serializer.errors, expected_errors)
